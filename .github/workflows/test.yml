@@ -1,0 +1,43 @@
+name: Test Dockerfile Path
+
+on: 
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test-dockerfile-path:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        app: [gpt-caterpillar, other-app]  # Add other app names as needed
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      # Add the step to set the Dockerfile path
+      - name: Set Dockerfile path
+        id: set_dockerfile_path
+        run: |
+          default_dockerfile="cov_apps/application/common/gui/Dockerfile"
+          
+          # Search for Dockerfile.{matrix.app} recursively
+          found_dockerfile=$(find . -type f -name "Dockerfile.${{ matrix.app }}" | head -n 1)
+          
+          if [[ -n "$found_dockerfile" ]]; then
+            dockerfile_path="$found_dockerfile"
+          else
+            dockerfile_path="$default_dockerfile"
+          fi
+          
+          echo "dockerfile_path=$dockerfile_path" >> $GITHUB_OUTPUT
+
+      # Output the app name and Dockerfile path for verification
+      - name: Echo app name and Dockerfile path
+        run: |
+          echo "App name: ${{ matrix.app }}"
+          echo "Dockerfile path: ${{ steps.set_dockerfile_path.outputs.dockerfile_path }}"
